@@ -1,29 +1,26 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+  <v-app>
+    <v-app-bar dense max-height="60">
+      <v-toolbar-title>CMC Historical Data</v-toolbar-title></v-app-bar
+    >
+    <v-divider />
+    <v-main> <update-page /> </v-main>
+  </v-app>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import HelloWorld from './components/HelloWorld.vue';
+import Vue from "vue";
+import UpdatePage from "./components/UpdatePage.vue";
 
 export default Vue.extend({
-  name: 'App',
+  name: "App",
+
   components: {
-    HelloWorld
-  }
+    UpdatePage,
+  },
+
+  data: () => ({
+    //
+  }),
 });
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
