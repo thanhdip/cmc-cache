@@ -1,9 +1,13 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { getAllCoins, getCMCIds, updateHistoricalData, getJsonCacheFilenames, toExcel } from "./cmc"
+const fs = require("fs-extra")
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const path = require("path");
+declare const __static: string;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -21,7 +25,8 @@ async function createWindow() {
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: (process.env
         .ELECTRON_NODE_INTEGRATION as unknown) as boolean,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
+      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      preload: path.resolve(__static, "preload.js"),
     },
   })
   win.setMenuBarVisibility(false)
@@ -83,3 +88,46 @@ if (isDevelopment) {
     })
   }
 }
+
+ipcMain.on("update-cache", (event, payload) => {
+  console.log("Updating cache...")
+  let strCoins: string[] = []
+  payload.coins.forEach((str: string) => {
+    strCoins.push(str.split(" ")[1])
+  });
+  let cmcIds = getCMCIds(strCoins)
+  cmcIds.forEach(
+    coin => {
+      updateHistoricalData(coin)
+    }
+  )
+  console.log(cmcIds)
+});
+
+
+ipcMain.on("generate-excel", (event, payload) => {
+  let allJsonCache = getJsonCacheFilenames()
+  toExcel(allJsonCache, payload.startDate, payload.endDate)
+});
+
+
+ipcMain.on("all-coin-data", (event) => {
+  console.log("Sending coin data...")
+  event.reply("all-coin-data", getAllCoins())
+});
+
+ipcMain.on("save-data", (event, payload) => {
+  console.log("Saving data...")
+  const writeData = {
+    coins: payload[0],
+    startDate: payload[1]
+  }
+  fs.writeFileSync("./saved_data.json", JSON.stringify(writeData, null, 2))
+});
+
+ipcMain.on("get-saved-data", (event, payload) => {
+  console.log("Sending saved coin data...")
+  const savedData = JSON.parse(fs.readFileSync("./saved_data.json"))
+  console.log(savedData)
+  event.reply("get-saved-data", savedData)
+});

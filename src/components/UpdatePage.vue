@@ -19,7 +19,7 @@
             ref="startDatePicker"
             v-model="startDatePickerOpen"
             :close-on-content-click="false"
-            :return-value.sync="date"
+            :return-value.sync="startDate"
             transition="scale-transition"
             offset-y
             min-width="auto"
@@ -60,7 +60,7 @@
             ref="endDatePicker"
             v-model="endDatePickerOpen"
             :close-on-content-click="false"
-            :return-value.sync="date"
+            :return-value.sync="endDate"
             transition="scale-transition"
             offset-y
             min-width="auto"
@@ -91,8 +91,8 @@
           </v-menu>
         </v-col>
         <v-col align="center" cols="12">
-          <v-btn elevation="2">Update Cache</v-btn>
-          <v-btn elevation="2">Generate Excel</v-btn>
+          <v-btn elevation="2" @click="updateCache">Update Cache</v-btn>
+          <v-btn elevation="2" @click="generateExcel">Generate Excel</v-btn>
         </v-col>
       </v-row>
     </v-container>
@@ -124,6 +124,54 @@ export default Vue.extend({
     startDatePickerOpen: false,
     endDatePickerOpen: false,
   }),
+  methods: {
+    print: function () {
+      console.log("Test print:");
+      console.log(this.coins);
+      console.log(this.startDate);
+      console.log(this.endDate);
+    },
+    updateCache: function () {
+      console.log("Sending update cache signal.");
+      const payload = {
+        coins: this.coins,
+        startDate: this.startDate,
+        endDate: this.endDate,
+      };
+      (window as any).ipc.send("update-cache", payload);
+    },
+    generateExcel: function () {
+      console.log("Send generate excel signal.");
+      const payload = {
+        coins: this.coins,
+        startDate: this.startDate,
+        endDate: this.endDate,
+      };
+      (window as any).ipc.send("generate-excel", payload);
+    },
+  },
+  mounted() {
+    this.$nextTick(function () {
+      (window as any).ipc.send("all-coin-data");
+      (window as any).ipc.send("get-saved-data");
+      window.addEventListener("beforeunload", () => {
+        (window as any).ipc.send("save-data", [this.coins, this.startDate]);
+      });
+    });
+    (window as any).ipc.on("all-coin-data", (payload: any) => {
+      this.allCoins = payload;
+    });
+    (window as any).ipc.on("get-saved-data", (payload: any) => {
+      console.log("SAVED DATA");
+      console.log(payload);
+      this.coins = payload["coins"];
+      this.startDate = payload["startDate"];
+    });
+  },
+  updated() {},
+  beforeDestroy() {
+    (window as any).ipc.removeAllListeners("all-coin-data");
+  },
 });
 </script>
 

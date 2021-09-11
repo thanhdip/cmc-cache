@@ -13,6 +13,9 @@
   "main": "background.js",
   "dependencies": {
     "core-js": "^3.6.5",
+    "exceljs": "^4.3.0",
+    "fs-extra": "^10.0.0",
+    "got": "^11.8.2",
     "vue": "^2.6.11",
     "vuetify": "^2.4.0"
   },
